@@ -1,0 +1,166 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: shops
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  memorySize: 512
+  stage: dev
+  region: eu-central-1
+  role: defaultRole
+
+
+functions:
+  shopCreate:
+    handler: shop.shopCreate
+    events:
+      - http: post shops/
+  shopGet:
+    handler: shop.shopGet
+    events:
+      - http: get shops/{id}
+  shopGetAll:
+    handler: shop.shopGetAll
+    events:
+      - http: get shops/
+  shopUpdate:
+    handler: shop.shopUpdate
+    events:
+      - http: put shops/{id}
+  shopDelete:
+    handler: shop.shopDelete
+    events:
+      - http: delete shops/{id}
+
+  productCreate:
+    handler: product.productCreate
+    events:
+      - http: post products/
+  productGet:
+    handler: product.productGet
+    events:
+      - http: get products/{id}
+  productGetAll:
+    handler: product.productGetAll
+    events:
+      - http: get products/
+  productUpdate:
+    handler: product.productUpdate
+    events:
+      - http: put products/{id}
+  productDelete:
+    handler: product.productDelete
+    events:
+      - http: delete products/{id}
+  productList:
+    handler: product.productList 
+    events:
+      - http: get shop/{id}/products
+
+# you can add CloudFormation resource templates here
+resources:  
+  Resources:
+    shopsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: shops
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    
+    
+
+    productsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: products
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: shop_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: shopid
+            KeySchema:
+              - AttributeName: shop_id
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+
+    defaultRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: defaultRole
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: web-shop-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:Query
+                    - dynamodb:Scan
+                    - dynamodb:GetItem
+                    - dynamodb:PutItem
+                    - dynamodb:UpdateItem
+                    - dynamodb:DeleteItem
+                  Resource: 
+                    - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:dynamodb'
+                        - Ref: AWS::Region
+                        - Ref: AWS::AccountId
+                        - 'table/shops'
+                    - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:dynamodb'
+                        - Ref: AWS::Region
+                        - Ref: AWS::AccountId
+                        - 'table/products'     
+                    - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:dynamodb'
+                        - Ref: AWS::Region
+                        - Ref: AWS::AccountId
+                        - 'table/products/index/shopid'    
+                                 
+

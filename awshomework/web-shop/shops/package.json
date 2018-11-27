@@ -1,0 +1,11 @@
+{
+    "name": "shops",
+    "version": "1.0.0",
+    "description": "",
+    "main": "shop.js",
+    "author": "Pei Zhang",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "uuid": "^3.2.1"
+    }
+}
